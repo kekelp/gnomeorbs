@@ -32,29 +32,14 @@ pub fn best_effort_uppercase(c: char) -> char {
 }
 
 pub trait AddManyThings {
-    fn push_4(&mut self, strings_to_add: [&str; 4]) -> &mut String;
-    fn push_3(&mut self, strings_to_add: [&str; 3]) -> &mut String;
-    fn push_2(&mut self, strings_to_add: [&str; 2]) -> &mut String;
+    fn manypush(&mut self, parts: &[&str]);
 }
 
 impl AddManyThings for String {
-    fn push_4(self: &mut String, strings_to_add: [&str; 4]) -> &mut String {
-        for s in strings_to_add {
-            self.push_str(s);
+    fn manypush(&mut self, parts: &[&str]) {
+        for &part in parts {
+            self.push_str(part);
         }
-        return self;
-    }
-    fn push_3(self: &mut String, strings_to_add: [&str; 3]) -> &mut String {
-        for s in strings_to_add {
-            self.push_str(s);
-        }
-        return self;
-    }
-    fn push_2(self: &mut String, strings_to_add: [&str; 2]) -> &mut String {
-        for s in strings_to_add {
-            self.push_str(s);
-        }
-        return self;
     }
 }
 

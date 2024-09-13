@@ -11,8 +11,7 @@ use std::error;
 use std::fs;
 use std::fs::create_dir_all;
 use std::io::ErrorKind;
-use std::path;
-use std::str::FromStr;
+
 use clap::Parser;
 use std::fs::OpenOptions;
 use std::path::PathBuf;
@@ -165,10 +164,10 @@ fn process() -> Result<()> {
    
    let mut new_desk_text: String = "".to_string();
    // Copy first 3 lines
-   new_desk_text.push_2([lines.next().unwrap(), "\n"]);
-   new_desk_text.push_2([lines.next().unwrap(), "\n"]);
-   new_desk_text.push_2([lines.next().unwrap(), "\n"]);
-   new_desk_text.push_2([lines.next().unwrap(), "\n"]);
+   new_desk_text.manypush(&[lines.next().unwrap(), "\n"]);
+   new_desk_text.manypush(&[lines.next().unwrap(), "\n"]);
+   new_desk_text.manypush(&[lines.next().unwrap(), "\n"]);
+   new_desk_text.manypush(&[lines.next().unwrap(), "\n"]);
 
    for line in lines {
       let mut tokens = line.split([' ','=']);
@@ -180,11 +179,11 @@ fn process() -> Result<()> {
       tokens.next();
       let key = tokens.next().unwrap();
       match key {
-         "Name" => { new_desk_text.push_3(["Name=", &title_case_bin_file_name, "\n"]); },
+         "Name" => { new_desk_text.manypush(&["Name=", &title_case_bin_file_name, "\n"]); },
          "Exec" => { 
             match args.terminal {
-               true => new_desk_text.push_4(["Exec=bash -c '", &bin_file_path_unicode, ";$SHELL'", "\n"]),
-               false => new_desk_text.push_3(["Exec=", &bin_file_path_unicode, "\n"]),
+               true => new_desk_text.manypush(&["Exec=bash -c '", &bin_file_path_unicode, ";$SHELL'", "\n"]),
+               false => new_desk_text.manypush(&["Exec=", &bin_file_path_unicode, "\n"]),
             };
          },
          "Terminal" => {
@@ -197,14 +196,14 @@ fn process() -> Result<()> {
             match args.skip_misspell {
                true => {
                   let keywords_text = misspellings(bin_file_name_unicode).join(",");
-                  new_desk_text.push_3(["Keywords=", &keywords_text, "\n"]);
+                  new_desk_text.manypush(&["Keywords=", &keywords_text, "\n"]);
                },
                false => new_desk_text += "# Keywords=\n",
             }
          },
-         "Icon" => { new_desk_text.push_3(["Icon=", &icon_text, "\n"]); },
+         "Icon" => { new_desk_text.manypush(&["Icon=", &icon_text, "\n"]); },
          // Copy all other lines
-         _ => { new_desk_text.push_2([line, "\n"]); },
+         _ => { new_desk_text.manypush(&[line, "\n"]); },
       };
    }
 
