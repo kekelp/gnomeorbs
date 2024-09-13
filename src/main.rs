@@ -1,4 +1,5 @@
 mod errors;
+mod template;
 use convert_case::Case;
 use convert_case::Casing;
 use errors::*;
@@ -78,8 +79,8 @@ fn process() -> Result<()> {
     let bin_file_name = bin_file_path.file_name().ok_or(NotAFileError)?;
 
     println!(
-        "Selected executable file:\n     {}",
-        bin_file_path.display()
+        "selected executable file:\n    {}",
+        bin_file_path.to_string_lossy()
     );
 
     let home_dir_str = env::var("HOME")?;
@@ -92,7 +93,7 @@ fn process() -> Result<()> {
         .join(&desk_file_stem)
         .with_extension(DESK_EXT);
 
-    println!("Target .desktop file:\n    {}", desk_file_path.display());
+    println!("target .desktop file:\n    {}", desk_file_path.to_string_lossy());
 
     let desk_file_opt = OpenOptions::new()
         .write(true)
@@ -118,66 +119,42 @@ fn process() -> Result<()> {
     let icon_path = local_icons_path
         .join(&desk_file_stem)
         .with_extension(ICON_EXT);
-    println!("Generating icon:  {}", icon_path.display());
+    println!("generating icon:\n    {}", icon_path.to_string_lossy());
     create_dir_all(local_icons_path)?;
     icon::draw_and_save_icon(bin_file_name_unicode, &icon_path);
 
     let icon_text = icon_path.to_str().ok_or(NonUnicodeNameError)?;
 
-    let desk_text = DESK_TEMPLATE;
+    let mut buffer: Vec<u8> = Vec::with_capacity(800);
 
-    // We only read the template, not a real .desktop file.
-    // Assumptions made on the template format:
-    //    - The first 4 lines are comments, headers or whitespace
-    //    - All other lines are in the commented value-less form "# Keyname="
-    let mut lines = desk_text.lines();
+    write!(buffer, "{}", template::HEADER)?;
 
-    let mut new_desk_text: String = "".to_string();
-    // Copy first 3 lines
-    new_desk_text.push_line(lines.next().unwrap());
-    new_desk_text.push_line(lines.next().unwrap());
-    new_desk_text.push_line(lines.next().unwrap());
-    new_desk_text.push_line(lines.next().unwrap());
-
-    for line in lines {
-        let mut tokens = line.split([' ', '=']);
-        tokens.next(); // Skip the first token (either comment marker or key)
-        let key = tokens.next().unwrap(); // Get the second token (key)
-
-        match key {
-            "Name" => {
-                new_desk_text.push_line(&format!("Name={title_case_bin_file_name}"));
-            }
-            "Exec" => {
-                new_desk_text.push_line(&format!("Exec={bin_file_path_unicode}"));
-            }
-            "Terminal" => {
-                if args.terminal {
-                    new_desk_text.push_line("Terminal=true");
-                } else {
-                    new_desk_text.push_line("# Terminal=");
-                }
-            }
-            "Keywords" => {
-                if args.skip_misspell {
-                    let keywords_text = misspellings(bin_file_name_unicode).join(",");
-                    new_desk_text.push_line(&format!("Keywords={keywords_text}"));
-                } else {
-                    new_desk_text.push_line("# Keywords=");
-                }
-            }
-            "Icon" => {
-                new_desk_text.push_line(&format!("Icon={icon_text}"));
-            }
-            _ => {
-                new_desk_text.push_line(line); // Copy all other lines
-            }
-        }
+    writeln!(buffer, "Name={}", title_case_bin_file_name)?;
+    writeln!(buffer, "Exec={}", bin_file_path_unicode)?;
+    
+    if args.terminal {
+        writeln!(buffer, "Terminal=true")?;
+    } else {
+        writeln!(buffer, "# Terminal=")?;
+    }
+    
+    if args.skip_misspell {
+        let keywords_text = misspellings(bin_file_name_unicode).join(",");
+        writeln!(buffer, "Keywords={keywords_text}")?;
+    } else {
+        writeln!(buffer, "# Keywords=")?;
     }
 
-    write!(desk_file, "{}", new_desk_text)?;
+    writeln!(buffer, "Icon={}", icon_text)?;
 
-    if args.edit == true {
+    write!(buffer, "{}", template::EMPTY_LINES)?;
+
+
+    desk_file.write_all(&buffer)?;
+    desk_file.flush()?;
+
+    if args.edit {
+        println!("Opening target file with default editor...");
         edit::edit_file(desk_file_path)?;
     }
 
