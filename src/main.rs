@@ -58,8 +58,6 @@ const REL_LOCAL_ICONS_PATH: &str = ".local/share/icons/hicolor/128x128/apps/";
 const DESK_EXT: &str = "desktop";
 const ICON_EXT: &str = "png";
 
-const DESK_TEMPLATE: &str = include_str!("template.desktop");
-
 fn process() -> Result<()> {
     let args = Args::parse();
 
