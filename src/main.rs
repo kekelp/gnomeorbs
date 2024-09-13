@@ -59,7 +59,7 @@ fn select_exe_file(args: &Args) -> Result<Utf8PathBuf> {
     }
 
     println!(
-        "selected executable file:\n    {}",
+        "Selected executable file:\n    {}",
         exe_file
     );
 
@@ -76,7 +76,6 @@ fn process() -> Result<()> {
     let local_apps_path = home_dir.join(Utf8Path::new(REL_LOCAL_APPLICATIONS_PATH));
     let local_icons_path = home_dir.join(Utf8Path::new(REL_LOCAL_ICONS_PATH));
 
-
     let exe_filename = exe_file.file_name().ok_or(NotAFileError)?;
     let title_case_exe_filename = exe_filename.to_case(Case::Title);
     let desktop_file_stem: Utf8PathBuf = exe_filename.into();
@@ -85,51 +84,51 @@ fn process() -> Result<()> {
         .join(&desktop_file_stem)
         .with_extension(DESK_EXT);
 
-    println!("target .desktop file:\n    {}", desktop_file_path);
+    println!("Target .desktop file:\n    {}", desktop_file_path);
 
-    let desktop_file_opt = OpenOptions::new()
-        .write(true)
-        .create_conditional(args.overwrite)
-        .open(desktop_file_path.clone());
+    let desktop_file_already_exists = Utf8Path::exists(&desktop_file_path);
+    let should_write = args.overwrite | (desktop_file_already_exists == false);
 
-    let mut desktop_file = match desktop_file_opt {
-        Ok(df) => df,
-        Err(err) => {
-            if err.kind() == ErrorKind::AlreadyExists {
-                return Err(Box::new(CustomAlreadyExistsError));
-            }
-            return Err(Box::new(err));
+    if should_write {
+        let mut desktop_file = File::create(&desktop_file_path)?;
+
+        let icon_path = local_icons_path
+            .join(&desktop_file_stem)
+            .with_extension(ICON_EXT);
+        println!("generating icon:\n    {}", icon_path);
+        create_dir_all(local_icons_path)?;
+        icon::draw_and_save_icon(exe_filename, &icon_path);
+
+        let mut buffer = String::with_capacity(800);
+
+        buffer.push_str(&template::HEADER);
+
+        buffer.pushln2("Name=", &title_case_exe_filename);
+        buffer.pushln2("Exec=", exe_file.as_str());
+        buffer.pushln2("Icon=", &icon_path.as_str());
+
+        let keywords = misspellings(exe_filename).join(",");
+        buffer.pushln2("Keywords=", &keywords);
+
+        if args.terminal {
+            buffer.pushln("Terminal=true");
+        } else {
+            buffer.pushln("# Terminal=");
         }
-    };
 
-    let icon_path = local_icons_path
-        .join(&desktop_file_stem)
-        .with_extension(ICON_EXT);
-    println!("generating icon:\n    {}", icon_path);
-    create_dir_all(local_icons_path)?;
-    icon::draw_and_save_icon(exe_filename, &icon_path);
+        buffer.push_str(&template::EMPTY_LINES);
 
-    let mut buffer = String::with_capacity(800);
-
-    buffer.push_str(&template::HEADER);
-
-    buffer.pushln2("Name=", &title_case_exe_filename);
-    buffer.pushln2("Exec=", exe_file.as_str());
-    buffer.pushln2("Icon=", &icon_path.as_str());
-
-    let keywords = misspellings(exe_filename).join(",");
-    buffer.pushln2("Keywords=", &keywords);
-
-    if args.terminal {
-        buffer.pushln("Terminal=true");
+        desktop_file.write_all(buffer.as_bytes())?;
+        desktop_file.flush()?;
     } else {
-        buffer.pushln("# Terminal=");
+        println!("Target .desktop file already exists, not touching it.");
+        if args.edit {
+            println!("You can use --overwrite to overwrite it.");
+        } else {
+            println!("You can use --overwrite to overwrite it,");
+            println!("or --edit to open the existing one with the system default editor.");
+        }
     }
-
-    buffer.push_str(&template::EMPTY_LINES);
-
-    desktop_file.write_all(buffer.as_bytes())?;
-    desktop_file.flush()?;
 
     if args.edit {
         println!("Opening target file with default editor...");
