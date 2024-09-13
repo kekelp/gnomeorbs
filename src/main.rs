@@ -43,10 +43,6 @@ struct Args {
     #[clap(long, short = 'm', value_parser)]
     skip_misspell: bool,
 
-    /// Use an existing icon instead of generating one
-    #[clap(long, short, value_parser)]
-    icon: Option<String>,
-
     /// After generating the .desktop file, open it with the default system editor
     #[clap(short, long, value_parser)]
     edit: bool,
@@ -127,39 +123,16 @@ fn process() -> Result<()> {
 
     let title_case_bin_file_name = bin_file_name_unicode.to_case(Case::Title);
 
-    // Generate icon
-    let icon_text;
-    // Feels weird that I have to declare these 2 here and bind the matched values to them
-    let icon_arg;
-    let icon_path;
-    match args.icon {
-        Some(icon_arg_temp) => {
-            icon_arg = icon_arg_temp;
-            match is_path_and_exists(&icon_arg) {
-                Some(icon_path_value) => {
-                    icon_path = icon_path_value;
-                    println!("Using icon path:  {}", icon_path.display());
-                    icon_text = icon_path.to_str().ok_or(NonUnicodeNameError)?
-                }
-                None => {
-                    // Check if the given argument can work as an icon name?
-                    // https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html#icon_lookup
-                    println!("Using icon name:  {}", icon_arg);
-                    icon_text = &icon_arg
-                }
-            }
-        }
-        None => {
-            let local_icons_path = home_dir_path.join(Path::new(REL_LOCAL_ICONS_PATH));
-            icon_path = local_icons_path
-                .join(&desk_file_stem)
-                .with_extension(ICON_EXT);
-            println!("Generating icon:  {}", icon_path.display());
-            create_dir_all(local_icons_path)?;
-            icon::draw_and_save_icon(bin_file_name_unicode, &icon_path);
-            icon_text = icon_path.to_str().ok_or(NonUnicodeNameError)?
-        }
-    };
+    let local_icons_path = home_dir_path.join(Path::new(REL_LOCAL_ICONS_PATH));
+    let icon_path = local_icons_path
+        .join(&desk_file_stem)
+        .with_extension(ICON_EXT);
+    println!("Generating icon:  {}", icon_path.display());
+    create_dir_all(local_icons_path)?;
+    icon::draw_and_save_icon(bin_file_name_unicode, &icon_path);
+
+    // todo: shouldn't convert this to UTF8.
+    let icon_text = icon_path.to_str().ok_or(NonUnicodeNameError)?;
 
     // let icon_text = icon_path.to_str().ok_or(NonUnicodeNameError)?;
 
