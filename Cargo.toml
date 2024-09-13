@@ -12,6 +12,7 @@ rand_seeder = "0.2.3"
 rand_pcg = "0.3.1"
 rand = "0.8.5"
 convert_case = "0.6.0"
+camino = "1.1.9"
 
 [lints.clippy]
 needless_return = { level = "allow" } 

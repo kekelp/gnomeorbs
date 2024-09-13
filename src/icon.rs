@@ -1,5 +1,4 @@
-use std::path::Path;
-
+use camino::Utf8Path;
 use image::{ImageBuffer, Pixel, Rgba};
 
 const XMAX: u32 = 128;
@@ -10,7 +9,7 @@ use rand::Rng;
 use rand_pcg::Pcg64;
 use rand_seeder::Seeder;
 
-pub fn draw_and_save_icon(seed: &str, path: &Path) {
+pub fn draw_and_save_icon(seed: &str, path: &Utf8Path) {
     let mut rng: Pcg64 = Seeder::from(seed).make_rng();
 
     let pixel_format_example = Rgba::<u8>([0, 0, 0, 0]);
