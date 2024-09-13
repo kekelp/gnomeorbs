@@ -3,7 +3,7 @@ use convert_case::Case;
 use convert_case::Casing;
 use errors::*;
 
-mod icons;
+mod icon;
 
 mod helper;
 use helper::*;
@@ -156,7 +156,7 @@ fn process() -> Result<()> {
                 .with_extension(ICON_EXT);
             println!("Generating icon:  {}", icon_path.display());
             create_dir_all(local_icons_path)?;
-            icons::draw_and_save_icon(bin_file_name_unicode, &icon_path);
+            icon::draw_and_save_icon(bin_file_name_unicode, &icon_path);
             icon_text = icon_path.to_str().ok_or(NonUnicodeNameError)?
         }
     };
