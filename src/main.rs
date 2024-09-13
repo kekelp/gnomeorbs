@@ -98,16 +98,18 @@ fn process() -> Result<()> {
         desk_file_path.display()
     );
 
-    create_dir_all(local_apps_path)?;
-    let mut desk_file = match OpenOptions::new()
+    let desk_file_opt = OpenOptions::new()
         .write(true)
         .create_conditional(args.overwrite)
-        .open(desk_file_path.clone())
-    {
+        .open(desk_file_path.clone());
+
+    let mut desk_file = match desk_file_opt {
         Ok(df) => df,
-        Err(err) => match err.kind() {
-            ErrorKind::AlreadyExists => return Err(Box::new(CustomAlreadyExistsError)),
-            _ => return Err(Box::new(err)),
+        Err(err) => {
+            if err.kind() == ErrorKind::AlreadyExists {
+                return Err(Box::new(CustomAlreadyExistsError));
+            }
+            return Err(Box::new(err));
         },
     };
 
@@ -124,10 +126,7 @@ fn process() -> Result<()> {
     create_dir_all(local_icons_path)?;
     icon::draw_and_save_icon(bin_file_name_unicode, &icon_path);
 
-    // todo: shouldn't convert this to UTF8.
     let icon_text = icon_path.to_str().ok_or(NonUnicodeNameError)?;
-
-    // let icon_text = icon_path.to_str().ok_or(NonUnicodeNameError)?;
 
     let desk_text = DESK_TEMPLATE;
 
@@ -139,10 +138,10 @@ fn process() -> Result<()> {
 
     let mut new_desk_text: String = "".to_string();
     // Copy first 3 lines
-    new_desk_text.manypush(&[lines.next().unwrap(), "\n"]);
-    new_desk_text.manypush(&[lines.next().unwrap(), "\n"]);
-    new_desk_text.manypush(&[lines.next().unwrap(), "\n"]);
-    new_desk_text.manypush(&[lines.next().unwrap(), "\n"]);
+    new_desk_text.push_line(lines.next().unwrap());
+    new_desk_text.push_line(lines.next().unwrap());
+    new_desk_text.push_line(lines.next().unwrap());
+    new_desk_text.push_line(lines.next().unwrap());
 
     for line in lines {
         let mut tokens = line.split([' ', '=']);

@@ -2,6 +2,7 @@ use std::{path::PathBuf, str::FromStr, string::String};
 
 pub trait AddManyThings {
     fn manypush(&mut self, parts: &[&str]);
+    fn push_line(&mut self, parts: &str);
 }
 
 impl AddManyThings for String {
@@ -9,6 +10,11 @@ impl AddManyThings for String {
         for &part in parts {
             self.push_str(part);
         }
+    }
+
+    fn push_line(&mut self, string: &str) {
+        self.push_str(string);
+        self.push('\n');
     }
 }
 
