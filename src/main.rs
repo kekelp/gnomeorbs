@@ -1,4 +1,6 @@
 mod errors;
+use convert_case::Case;
+use convert_case::Casing;
 use errors::*;
 
 mod icons;
@@ -118,7 +120,8 @@ fn process() -> Result<()> {
    let bin_file_path_unicode = bin_file_path.to_str().ok_or(NonUnicodePathError)?; 
    let bin_file_name_unicode = bin_file_name.to_str().ok_or(NonUnicodeNameError)?;
 
-   let title_case_bin_file_name = turn_to_title_case(bin_file_name_unicode.to_owned());
+
+   let title_case_bin_file_name = bin_file_name_unicode.to_case(Case::Title);
    
    // Generate icon
    let icon_text;
@@ -132,7 +135,7 @@ fn process() -> Result<()> {
             Some(icon_path_value) => {
                icon_path = icon_path_value;
                println!("Using icon path:  {}", icon_path.display());
-               icon_text = icon_path.to_str().ok_or(NonUnicodeNameError)?.clone()
+               icon_text = icon_path.to_str().ok_or(NonUnicodeNameError)?
             },
             None => {
                // Check if the given argument can work as an icon name?
