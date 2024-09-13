@@ -2,7 +2,9 @@ mod errors;
 mod template;
 mod icon;
 mod extra;
+mod misspellings;
 use extra::*;
+use misspellings::*;
 use camino::*;
 use convert_case::*;
 use errors::*;
@@ -22,7 +24,7 @@ struct Args {
     #[clap(value_parser)]
     bin_file: String,
 
-    /// If a .desktop file with the same name if found, overwrite it
+    /// If a .desktop file with the same name if already present, overwrite it
     #[clap(short, long, value_parser)]
     overwrite: bool,
 
@@ -33,10 +35,6 @@ struct Args {
     /// After generating the .desktop file, open it with the default system editor
     #[clap(short, long, value_parser)]
     edit: bool,
-    // todo: remove this and make sure that --edit without --overwrite works like that
-    // If it already exists, open the matching .desktop file with the default system editor, and do nothing else
-    // #[clap(long, short = 'E', value_parser)]
-    // edit_only: bool,
 }
 
 const REL_LOCAL_APPLICATIONS_PATH: &str = ".local/share/applications/";
@@ -44,9 +42,11 @@ const REL_LOCAL_ICONS_PATH: &str = ".local/share/icons/hicolor/128x128/apps/";
 const DESK_EXT: &str = "desktop";
 const ICON_EXT: &str = "png";
 
-fn select_exe_file(args: &Args) -> Result<Utf8PathBuf> {
-    let exe_file = Utf8Path::new(&args.bin_file).canonicalize_utf8()?;
+fn process() -> Result<()> {
+    let args = Args::parse();
 
+    // select executable file
+    let exe_file = Utf8Path::new(&args.bin_file).canonicalize_utf8()?;
     let metadata = fs::metadata(exe_file.clone())?;
 
     if metadata.is_file() == false {
@@ -63,14 +63,7 @@ fn select_exe_file(args: &Args) -> Result<Utf8PathBuf> {
         exe_file
     );
 
-    return Ok(exe_file);
-}
-
-fn process() -> Result<()> {
-    let args = Args::parse();
-
-    let exe_file = select_exe_file(&args)?; 
-
+    // determine target .desktop file
     let home_dir = env::var("HOME")?;
     let home_dir = Utf8Path::new(&home_dir);
     let local_apps_path = home_dir.join(Utf8Path::new(REL_LOCAL_APPLICATIONS_PATH));
@@ -86,9 +79,9 @@ fn process() -> Result<()> {
 
     println!("Target .desktop file:\n    {}", desktop_file_path);
 
+    // write .desktop file    
     let desktop_file_already_exists = Utf8Path::exists(&desktop_file_path);
     let should_write = args.overwrite | (desktop_file_already_exists == false);
-
     if should_write {
         let mut desktop_file = File::create(&desktop_file_path)?;
 
@@ -130,6 +123,7 @@ fn process() -> Result<()> {
         }
     }
 
+    // open with default editor
     if args.edit {
         println!("Opening target file with default editor...");
         edit::edit_file(desktop_file_path)?;
