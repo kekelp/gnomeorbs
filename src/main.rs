@@ -1,27 +1,16 @@
 mod errors;
 mod template;
-use camino::Utf8Path;
-use camino::Utf8PathBuf;
-use convert_case::Case;
-use convert_case::Casing;
-use errors::*;
-
 mod icon;
-
 mod extra;
 use extra::*;
-
-use std::env;
-use std::error;
-use std::fs;
-use std::fs::create_dir_all;
-use std::io::ErrorKind;
-
-use clap::Parser;
-use std::fs::OpenOptions;
+use camino::*;
+use convert_case::*;
+use errors::*;
+use std::*;
+use std::io::*;
+use std::fs::*;
 use std::os::unix::prelude::MetadataExt;
-
-use std::io::Write;
+use clap::Parser;
 
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -40,10 +29,6 @@ struct Args {
     /// Make the executable run in an interactive terminal
     #[clap(short, long, value_parser)]
     terminal: bool,
-
-    /// Don't add misspellings of the name as keywords
-    #[clap(long, short = 'm', value_parser)]
-    skip_misspell: bool,
 
     /// After generating the .desktop file, open it with the default system editor
     #[clap(short, long, value_parser)]
@@ -132,13 +117,8 @@ fn process() -> Result<()> {
     buffer.pushln2("Exec=", exe_file.as_str());
     buffer.pushln2("Icon=", &icon_path.as_str());
 
-    // todo: this is flipped lol
-    if args.skip_misspell {
-        let keywords = misspellings(exe_filename).join(",");
-        buffer.pushln2("Keywords=", &keywords);
-    } else {
-        buffer.pushln("# Keywords=");
-    }
+    let keywords = misspellings(exe_filename).join(",");
+    buffer.pushln2("Keywords=", &keywords);
 
     if args.terminal {
         buffer.pushln("Terminal=true");
@@ -169,42 +149,4 @@ fn main() {
             println!("Completed.");
         }
     }
-}
-
-fn misspellings(text: &str) -> Vec<String> {
-    let mut results = Vec::<String>::new();
-
-    // inverted letters
-    let n = std::cmp::min(text.len() - 1, 4);
-    for i in 0..n {
-        results.push(invert_letters(text, i, i + 1));
-    }
-
-    // missing letters
-    if n >= 3 {
-        results.push(text[0..2].to_string() + &text[3..]);
-    }
-    if n >= 2 {
-        results.push(text[0..1].to_string() + &text[2..]);
-    }
-    results.push(text[1..].to_string());
-
-    return results;
-}
-
-fn invert_letters(text: &str, i1: usize, i2: usize) -> String {
-    let characs: Vec<char> = text.chars().collect();
-
-    let mut char_vec_1 = Vec::<char>::new();
-
-    for (i, c) in characs.iter().enumerate() {
-        let nc = match i {
-            i if i == i1 => characs[i2],
-            i if i == i2 => characs[i1],
-            _ => *c,
-        };
-        char_vec_1.push(nc);
-    }
-    let result: String = char_vec_1.into_iter().collect();
-    return result;
 }
