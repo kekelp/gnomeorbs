@@ -34,12 +34,12 @@ pub fn draw_and_save_icon(seed: &str, path: &Utf8Path) {
     let color1 = hsl_to_rgb(hue1, 95., 55.0);
     let color2 = hsl_to_rgb(hue2, 95., 55.0);
 
-    draw_planet(&mut imgbuf, color1, color2, radius);
+    draw_orb(&mut imgbuf, color1, color2, radius);
 
     imgbuf.save(path).unwrap();
 }
 
-pub fn draw_planet(
+pub fn draw_orb(
     imgbuf: &mut ImageBuffer<Rgba<u8>, Vec<u8>>,
     color1: Rgba<u8>,
     color2: Rgba<u8>,
@@ -61,7 +61,7 @@ pub fn draw_planet(
         if dist < radius {
             pixel.blend(&color);
         } else if dist < (radius + 1.0) {
-            // Antialiasing artigianale
+            // Antialiasing
             let blend = (radius + 1.0) - dist;
             color[3] = (blend * 255.) as u8;
             pixel.blend(&color);

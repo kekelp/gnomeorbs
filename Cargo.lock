@@ -231,20 +231,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gdek"
-version = "1.0.0"
-dependencies = [
- "camino",
- "clap",
- "convert_case",
- "edit",
- "image",
- "rand",
- "rand_pcg",
- "rand_seeder",
-]
-
-[[package]]
 name = "getrandom"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -263,6 +249,20 @@ checksum = "3fb2d69b19215e18bb912fa30f7ce15846e301408695e44e0ef719f1da9e19f2"
 dependencies = [
  "color_quant",
  "weezl",
+]
+
+[[package]]
+name = "gnomeorbs"
+version = "1.0.0"
+dependencies = [
+ "camino",
+ "clap",
+ "convert_case",
+ "edit",
+ "image",
+ "rand",
+ "rand_pcg",
+ "rand_seeder",
 ]
 
 [[package]]
