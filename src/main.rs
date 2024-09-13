@@ -5,8 +5,8 @@ use errors::*;
 
 mod icons;
 
-mod lib;
-use lib::*;
+mod helper;
+use helper::*;
 
 use std::env;
 use std::error;
