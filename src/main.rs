@@ -58,33 +58,38 @@ const REL_LOCAL_ICONS_PATH: &str = ".local/share/icons/hicolor/128x128/apps/";
 const DESK_EXT: &str = "desktop";
 const ICON_EXT: &str = "png";
 
-fn process() -> Result<()> {
-    let args = Args::parse();
-
+fn select_exe_file(args: &Args) -> Result<PathBuf> {
     let bin_file_path = Path::new(&args.bin_file).canonicalize()?;
 
-    let bin_file_metadata = fs::metadata(bin_file_path.clone())?;
+    let metadata = fs::metadata(bin_file_path.clone())?;
 
-    if bin_file_metadata.is_file() == false {
+    if metadata.is_file() == false {
         return Err(Box::new(NotAFileError));
     }
 
     let executable = 0o0111;
-    if bin_file_metadata.mode() & executable == 0 {
+    if metadata.mode() & executable == 0 {
         return Err(Box::new(NotExecutableError));
     }
-
-    let bin_file_name = bin_file_path.file_name().ok_or(NotAFileError)?;
 
     println!(
         "selected executable file:\n    {}",
         bin_file_path.to_string_lossy()
     );
 
+    return Ok(bin_file_path);
+}
+
+fn process() -> Result<()> {
+    let args = Args::parse();
+
+    let bin_file_path = select_exe_file(&args)?; 
+
     let home_dir_str = env::var("HOME")?;
     let home_dir_path = Path::new(&home_dir_str);
     let local_apps_path = home_dir_path.join(Path::new(REL_LOCAL_APPLICATIONS_PATH));
 
+    let bin_file_name = bin_file_path.file_name().ok_or(NotAFileError)?;
     let desk_file_stem: PathBuf = bin_file_name.into();
 
     let desk_file_path = local_apps_path
