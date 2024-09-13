@@ -86,10 +86,10 @@ fn process() -> Result<()> {
 
     let bin_file_path = select_exe_file(&args)?; 
 
-    let home_dir_str = env::var("HOME")?;
-    let home_dir_path = Utf8Path::new(&home_dir_str);
-    let local_apps_path = home_dir_path.join(Utf8Path::new(REL_LOCAL_APPLICATIONS_PATH));
-    let local_icons_path = home_dir_path.join(Utf8Path::new(REL_LOCAL_ICONS_PATH));
+    let home_dir = env::var("HOME")?;
+    let home_dir = Utf8Path::new(&home_dir);
+    let local_apps_path = home_dir.join(Utf8Path::new(REL_LOCAL_APPLICATIONS_PATH));
+    let local_icons_path = home_dir.join(Utf8Path::new(REL_LOCAL_ICONS_PATH));
 
 
     let bin_file_name = bin_file_path.file_name().ok_or(NotAFileError)?;
