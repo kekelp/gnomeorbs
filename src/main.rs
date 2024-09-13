@@ -142,42 +142,41 @@ fn process() -> Result<()> {
     new_desk_text.push_line(lines.next().unwrap());
     new_desk_text.push_line(lines.next().unwrap());
     new_desk_text.push_line(lines.next().unwrap());
-
+    
     for line in lines {
         let mut tokens = line.split([' ', '=']);
-        // The line below does two things at once:
-        // - For commented lines, skip the 1st token which is #
-        // - For non-commented lines (hardcoded to a default value, like Type=Application), skip the 1st token, which is the key,
-        //       so that the value won't match any known key.
-        //    Will break if I decide to hardcode some very stupid defaults like Type=PrefersNonDefaultGPU where the value for some key is also the name of a key.
-        tokens.next();
-        let key = tokens.next().unwrap();
+        tokens.next(); // Skip the first token (either comment marker or key)
+        let key = tokens.next().unwrap(); // Get the second token (key)
+        
         match key {
             "Name" => {
-                new_desk_text.manypush(&["Name=", &title_case_bin_file_name, "\n"]);
+                new_desk_text.push_line(&format!("Name={title_case_bin_file_name}"));
             }
             "Exec" => {
-                new_desk_text.manypush(&["Exec=", &bin_file_path_unicode, "\n"]);
+                new_desk_text.push_line(&format!("Exec={bin_file_path_unicode}"));
             }
-            "Terminal" => match args.terminal {
-                true => new_desk_text += "Terminal=true\n",
-                false => new_desk_text += "# Terminal=\n",
-            },
-            "Keywords" => match args.skip_misspell {
-                true => {
-                    let keywords_text = misspellings(bin_file_name_unicode).join(",");
-                    new_desk_text.manypush(&["Keywords=", &keywords_text, "\n"]);
+            "Terminal" => {
+                if args.terminal {
+                    new_desk_text.push_line("Terminal=true");
+                } else {
+                    new_desk_text.push_line("# Terminal=");
                 }
-                false => new_desk_text += "# Keywords=\n",
-            },
+            }
+            "Keywords" => {
+                if args.skip_misspell {
+                    let keywords_text = misspellings(bin_file_name_unicode).join(",");
+                    new_desk_text.push_line(&format!("Keywords={keywords_text}"));
+                } else {
+                    new_desk_text.push_line("# Keywords=");
+                }
+            }
             "Icon" => {
-                new_desk_text.manypush(&["Icon=", &icon_text, "\n"]);
+                new_desk_text.push_line(&format!("Icon={icon_text}"));
             }
-            // Copy all other lines
             _ => {
-                new_desk_text.manypush(&[line, "\n"]);
+                new_desk_text.push_line(line); // Copy all other lines
             }
-        };
+        }
     }
 
     write!(desk_file, "{}", new_desk_text)?;
