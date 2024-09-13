@@ -16,15 +16,15 @@ use clap::Parser;
 
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
-/// Generate a .desktop file for a given executable file or script.
+/// Generate a .desktop file for a given executable file or script
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
     /// Target executable file or script
     #[clap(value_parser)]
-    bin_file: String,
+    executable_file: String,
 
-    /// If a .desktop file or an icon with the same name are already present, overwrite them.
+    /// Overwrite .desktop files or icons if they are already present
     #[clap(short, long, value_parser)]
     overwrite: bool,
 
@@ -46,7 +46,7 @@ fn process() -> Result<()> {
     let args = Args::parse();
 
     // select executable file
-    let exe_file = Utf8Path::new(&args.bin_file).canonicalize_utf8()?;
+    let exe_file = Utf8Path::new(&args.executable_file).canonicalize_utf8()?;
     let metadata = fs::metadata(exe_file.clone())?;
 
     if metadata.is_file() == false {
@@ -104,7 +104,14 @@ fn process() -> Result<()> {
         buffer.push_str(&template::HEADER);
 
         buffer.pushln2("Name=", &title_case_exe_filename);
-        buffer.pushln2("Exec=", exe_file.as_str());
+
+        if args.terminal {
+            let terminal_exec = format!("Exec=bash -c {exe_file}; $SHELL");
+            buffer.pushln(&terminal_exec)
+        } else {
+            buffer.pushln2("Exec=", exe_file.as_str());
+        }
+
         buffer.pushln2("Icon=", &icon_path.as_str());
 
         let keywords = misspellings(exe_filename).join(",");
