@@ -46,7 +46,6 @@ struct Args {
     /// After generating the .desktop file, open it with the default system editor
     #[clap(short, long, value_parser)]
     edit: bool,
-
     // todo: remove this and make sure that --edit without --overwrite works like that
     // If it already exists, open the matching .desktop file with the default system editor, and do nothing else
     // #[clap(long, short = 'E', value_parser)]
@@ -93,10 +92,7 @@ fn process() -> Result<()> {
         .join(&desk_file_stem)
         .with_extension(DESK_EXT);
 
-    println!(
-        "Target .desktop file:\n    {}",
-        desk_file_path.display()
-    );
+    println!("Target .desktop file:\n    {}", desk_file_path.display());
 
     let desk_file_opt = OpenOptions::new()
         .write(true)
@@ -110,7 +106,7 @@ fn process() -> Result<()> {
                 return Err(Box::new(CustomAlreadyExistsError));
             }
             return Err(Box::new(err));
-        },
+        }
     };
 
     let bin_file_path_unicode = bin_file_path.to_str().ok_or(NonUnicodePathError)?;
@@ -142,12 +138,12 @@ fn process() -> Result<()> {
     new_desk_text.push_line(lines.next().unwrap());
     new_desk_text.push_line(lines.next().unwrap());
     new_desk_text.push_line(lines.next().unwrap());
-    
+
     for line in lines {
         let mut tokens = line.split([' ', '=']);
         tokens.next(); // Skip the first token (either comment marker or key)
         let key = tokens.next().unwrap(); // Get the second token (key)
-        
+
         match key {
             "Name" => {
                 new_desk_text.push_line(&format!("Name={title_case_bin_file_name}"));
