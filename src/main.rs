@@ -24,7 +24,7 @@ struct Args {
     #[clap(value_parser)]
     bin_file: String,
 
-    /// If a .desktop file with the same name if already present, overwrite it
+    /// If a .desktop file or an icon with the same name are already present, overwrite them.
     #[clap(short, long, value_parser)]
     overwrite: bool,
 
@@ -80,17 +80,24 @@ fn process() -> Result<()> {
     println!("Target .desktop file:\n    {}", desktop_file_path);
 
     // write .desktop file    
-    let desktop_file_already_exists = Utf8Path::exists(&desktop_file_path);
-    let should_write = args.overwrite | (desktop_file_already_exists == false);
+    let should_write = args.overwrite | (Utf8Path::exists(&desktop_file_path) == false);
     if should_write {
         let mut desktop_file = File::create(&desktop_file_path)?;
 
         let icon_path = local_icons_path
             .join(&desktop_file_stem)
             .with_extension(ICON_EXT);
-        println!("generating icon:\n    {}", icon_path);
-        create_dir_all(local_icons_path)?;
-        icon::draw_and_save_icon(exe_filename, &icon_path);
+
+        let should_write_icon = args.overwrite | (Utf8Path::exists(&icon_path) == false);
+
+        if should_write_icon {
+            create_dir_all(local_icons_path)?;
+            icon::draw_and_save_icon(exe_filename, &icon_path);
+            println!("Generated icon:\n    {}", icon_path);
+        } else {
+            println!("Icon already exists, not touching it.");
+            println!("You can use --overwrite to overwrite both the .desktop file and the icon.");
+        }
 
         let mut buffer = String::with_capacity(800);
 
