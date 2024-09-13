@@ -1,4 +1,4 @@
-use std::{string::String, path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr, string::String};
 
 pub trait AddManyThings {
     fn manypush(&mut self, parts: &[&str]);
@@ -21,12 +21,9 @@ impl CreateConditional for std::fs::OpenOptions {
         if overwriting == false {
             return self.create_new(true);
         } else {
-            return self
-            .create (true)
-            .truncate(true);
+            return self.create(true).truncate(true);
         }
     }
-    
 }
 
 pub fn is_path_and_exists(string: &str) -> Option<PathBuf> {

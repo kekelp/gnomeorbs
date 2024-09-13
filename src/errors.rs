@@ -1,6 +1,5 @@
-use std::fmt;
 use std::error::Error;
-
+use std::fmt;
 
 #[derive(Debug, Clone)]
 pub struct NotAFileError;
@@ -12,9 +11,6 @@ impl fmt::Display for NotAFileError {
 }
 impl Error for NotAFileError {}
 
-
-
-
 #[derive(Debug, Clone)]
 pub struct NotExecutableError;
 
@@ -24,8 +20,6 @@ impl fmt::Display for NotExecutableError {
     }
 }
 impl Error for NotExecutableError {}
-
-
 
 #[derive(Debug, Clone)]
 pub struct NoHomeDirError;
@@ -37,20 +31,18 @@ impl fmt::Display for NoHomeDirError {
 }
 impl Error for NoHomeDirError {}
 
-
 #[derive(Debug, Clone)]
 pub struct CustomAlreadyExistsError;
 
 impl fmt::Display for CustomAlreadyExistsError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, 
-        "The target application file already exists. You can use \"-o\" to overwrite it."
+        write!(
+            f,
+            "The target application file already exists. You can use \"-o\" to overwrite it."
         )
     }
 }
 impl Error for CustomAlreadyExistsError {}
-
-
 
 #[derive(Debug, Clone)]
 pub struct NonUnicodePathError;
