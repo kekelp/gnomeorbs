@@ -63,7 +63,7 @@ pub fn draw_planet(
             pixel.blend(&color);
         } else if dist < (radius + 1.0) {
             // Antialiasing artigianale
-            let blend = ((radius + 1.0) - dist) as f32;
+            let blend = (radius + 1.0) - dist;
             color[3] = (blend * 255.) as u8;
             pixel.blend(&color);
         }
