@@ -35,7 +35,7 @@ struct Args {
     #[clap(short, long, value_parser)]
     overwrite: bool,
 
-    /// Run the executable in an interactive terminal
+    /// Make the executable run in an interactive terminal
     #[clap(short, long, value_parser)]
     terminal: bool,
 
@@ -47,9 +47,10 @@ struct Args {
     #[clap(short, long, value_parser)]
     edit: bool,
 
-    /// If it already exists, open the matching .desktop file with the default system editor, and do nothing else
-    #[clap(long, short = 'E', value_parser)]
-    edit_only: bool,
+    // todo: remove this and make sure that --edit without --overwrite works like that
+    // If it already exists, open the matching .desktop file with the default system editor, and do nothing else
+    // #[clap(long, short = 'E', value_parser)]
+    // edit_only: bool,
 }
 
 const REL_LOCAL_APPLICATIONS_PATH: &str = ".local/share/applications/";
@@ -70,14 +71,15 @@ fn process() -> Result<()> {
         return Err(Box::new(NotAFileError));
     }
 
-    if bin_file_metadata.mode() & 0o0111 == 0 {
+    let executable = 0o0111;
+    if bin_file_metadata.mode() & executable == 0 {
         return Err(Box::new(NotExecutableError));
     }
 
     let bin_file_name = bin_file_path.file_name().ok_or(NotAFileError)?;
 
     println!(
-        "Selected executable file:       {}",
+        "Selected executable file:\n     {}",
         bin_file_path.display()
     );
 
@@ -92,18 +94,9 @@ fn process() -> Result<()> {
         .with_extension(DESK_EXT);
 
     println!(
-        "Target .desktop file:           {}",
+        "Target .desktop file:\n    {}",
         desk_file_path.display()
     );
-
-    if args.edit_only == true {
-        match edit::edit_file(desk_file_path) {
-            x => {
-                println!("{:?}", x);
-            }
-        }
-        return Ok(());
-    }
 
     create_dir_all(local_apps_path)?;
     let mut desk_file = match OpenOptions::new()
@@ -165,15 +158,7 @@ fn process() -> Result<()> {
                 new_desk_text.manypush(&["Name=", &title_case_bin_file_name, "\n"]);
             }
             "Exec" => {
-                match args.terminal {
-                    true => new_desk_text.manypush(&[
-                        "Exec=bash -c '",
-                        &bin_file_path_unicode,
-                        ";$SHELL'",
-                        "\n",
-                    ]),
-                    false => new_desk_text.manypush(&["Exec=", &bin_file_path_unicode, "\n"]),
-                };
+                new_desk_text.manypush(&["Exec=", &bin_file_path_unicode, "\n"]);
             }
             "Terminal" => match args.terminal {
                 true => new_desk_text += "Terminal=true\n",
