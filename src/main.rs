@@ -46,8 +46,8 @@ fn process() -> Result<()> {
     let args = Args::parse();
 
     // select executable file
-    let exe_file = Utf8Path::new(&args.executable_file).canonicalize_utf8()?;
-    let metadata = fs::metadata(exe_file.clone())?;
+    let exe_file = Utf8Path::new(&args.executable_file);
+    let metadata = fs::metadata(exe_file)?;
 
     if metadata.is_file() == false {
         return Err(Box::new(NotAFileError));
